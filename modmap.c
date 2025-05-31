@@ -1,0 +1,136 @@
+#include <cerrno>
+#include <sys/types.h>
+#include <sys/param.h>
+#include <sys/conf.h>
+#include <sys/systm.h>
+#include <sys/kernel.h>
+#include <sys/module.h>
+#include <sys/malloc.h>
+#include <sys/uio.h>
+#include <vm/vm.h>
+#include <vm/pmap.h>
+#include <machine/bus.h>  /* For BUS_SPACE_MAXADDR constants */
+#include <cheri/cheric.h>
+
+#include "modmap.h"
+
+#define BUFSIZE (1 << 16)
+
+MALLOC_DECLARE(M_MODMAP);
+MALLOC_DEFINE(M_MODMAP, "modmap", "modified mmap device");
+
+
+static d_open_t		modmap_open;
+static d_close_t	modmap_close;
+static d_read_t		modmap_read;
+static d_write_t	modmap_write;
+static d_ioctl_t	modmap_ioctl;
+static int		modmap_modevent(module_t, int, void *);
+
+static struct cdevsw modmap_cdevsw = {
+	.d_name		= "modmap",
+	.d_version	= D_VERSION,
+	.d_flags	= D_TRACKCLOSE,
+	.d_open		= modmap_open,
+	.d_close	= modmap_close,
+	.d_read		= modmap_read,
+	.d_write	= modmap_write,
+	.d_ioctl	= modmap_ioctl,
+};
+
+static struct cdev *modmap_cdev;
+static foo_t *foo;
+static test_t *test;
+
+static int
+modmap_open(struct cdev *dev, int flags, int devtype, struct thread *td)
+{
+	uprintf("modmap: device opened\n");
+	return (0);
+}
+
+static int
+modmap_close(struct cdev *dev, int flags, int devtype, struct thread *td)
+{
+	uprintf("modmap: device closed\n");
+	return (0);
+}
+
+static int
+modmap_read(struct cdev *dev, struct uio *uio, int ioflag)
+{
+    uprintf("MODMAP: Read Not Allowed\n");
+	return EINVAL;
+}
+
+static int
+modmap_write(struct cdev *dev, struct uio *uio, int ioflag)
+{
+    uprintf("MODMAP: Write Not Allowed\n");
+    return EINVAL;
+}
+
+
+
+static int
+modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
+    struct thread *td)
+{
+    struct mmap_req_hook kern_req;
+    struct cap_req kern_cap_req;
+    int error = 0;
+
+	switch (cmd) {
+	case MODMAPIOC_MAP:
+        struct mmap_req_hook* user_req = (struct mmap_req_hook *)addr;
+
+        error = copyin(user_req, &kern_req, sizeof(kern_req));
+        if(error != 0)
+            break;
+
+        struct cap_req* __capability user_cap_req = kern_req.extra;
+
+        error = copyin(user_cap_req, &kern_cap_req, sizeof(kern_cap_req));
+        if(error != 0)
+            break;
+
+        kern_req.extra = (void * __kerncap)(&kern_cap_req);
+        
+        error = kern_mmap_hook(td, &kern_req);
+        if(error != 0)
+            break;
+
+		break;
+	default:
+		error = ENOTTY;
+		break;
+	}
+
+	return (error);
+}
+
+uint8_t* buffer;
+
+static int
+modmap_modevent(module_t mod, int type, void *arg)
+{
+	int error = 0;
+
+	switch (type) {
+	case MOD_LOAD:
+		modmap_cdev = make_dev(&modmap_cdevsw, 0, UID_ROOT, GID_WHEEL,
+		    0666, "modmap");
+		break;
+	case MOD_UNLOAD: /* FALLTHROUGH */
+	case MOD_SHUTDOWN:
+		destroy_dev(modmap_cdev);
+		break;
+	default:
+		error = EOPNOTSUPP;
+		break;
+	}
+
+	return (error);
+}
+
+DEV_MODULE(modmap, modmap_modevent, NULL);
