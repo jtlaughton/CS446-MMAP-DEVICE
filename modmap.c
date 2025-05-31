@@ -75,17 +75,19 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
 {
     mmap_req_hook_t kern_req;
     struct cap_req kern_cap_req;
+    mmap_req_hook_t* user_req;
+    struct cap_req* __capability user_cap_req;
     int error = 0;
 
 	switch (cmd) {
 	case MODMAPIOC_MAP:
-        mmap_req_hook_t* user_req = (mmap_req_hook_t *)addr;
+        user_req = (mmap_req_hook_t *)addr;
 
         error = copyin(user_req, &kern_req, sizeof(kern_req));
         if(error != 0)
             break;
 
-        struct cap_req* __capability user_cap_req = kern_req.extra;
+        user_cap_req = kern_req.extra;
 
         error = copyin(user_cap_req, &kern_cap_req, sizeof(kern_cap_req));
         if(error != 0)
