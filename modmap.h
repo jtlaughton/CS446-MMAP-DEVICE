@@ -5,19 +5,11 @@
 #include <sys/ioccom.h>
 #include <sys/syscallsubr.h>
 
-struct mmap_req_hook {
-	void * __kerncap addr;
-	size_t len;
-	int prot;
-	int flags;
-	int fd;
-	off_t pos;
-	void * __kerncap extra;
- };
+typedef struct mmap_req_hook mmap_req_hook_t;
 
 struct cap_req {
     void* __capability user_cap;
-}
+};
 
-#define MODMAPIOC_MAP	_IORW('a', 1, struct mmap_req_hook)
+#define MODMAPIOC_MAP	_IOWR('a', 1, struct mmap_req_hook)
 #endif 

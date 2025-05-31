@@ -1,4 +1,3 @@
-#include <cerrno>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/conf.h>
@@ -39,8 +38,6 @@ static struct cdevsw modmap_cdevsw = {
 };
 
 static struct cdev *modmap_cdev;
-static foo_t *foo;
-static test_t *test;
 
 static int
 modmap_open(struct cdev *dev, int flags, int devtype, struct thread *td)
@@ -76,13 +73,13 @@ static int
 modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
     struct thread *td)
 {
-    struct mmap_req_hook kern_req;
+    mmap_req_hook_t kern_req;
     struct cap_req kern_cap_req;
     int error = 0;
 
 	switch (cmd) {
 	case MODMAPIOC_MAP:
-        struct mmap_req_hook* user_req = (struct mmap_req_hook *)addr;
+        mmap_req_hook_t* user_req = (mmap_req_hook_t *)addr;
 
         error = copyin(user_req, &kern_req, sizeof(kern_req));
         if(error != 0)
