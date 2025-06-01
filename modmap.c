@@ -77,6 +77,8 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
     mmap_req_user_t* kern_req_user;
 
     struct cap_req* user_cap_req;
+    struct cap_req kern_cap_req;
+    
     int error = 0;
 
     mmap_req_hook_t kern_req;
