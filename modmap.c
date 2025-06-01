@@ -135,9 +135,13 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
             // }
 
             uprintf("First Copyout\n");
-            error = copyout(&kern_cap_req, kern_req_user->extra, sizeof(kern_cap_req));
-            if(error != 0)
+            error = copyout(&kern_cap_req, user_cap_req, sizeof(kern_cap_req));
+            if(error != 0){
+                uprintf("Copyout Error: %d\n", error);
                 break;
+            }
+
+            kern_req_user->extra = (void * __capability)user_cap_req;
 
             break;
         default:
