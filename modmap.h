@@ -21,5 +21,5 @@ struct cap_req {
     void* __capability user_cap;
 };
 
-#define MODMAPIOC_MAP	_IOWR('a', 1, struct mmap_req_hook)
+#define MODMAPIOC_MAP	_IOWR('a', 1, mmap_req_user_t)
 #endif 
