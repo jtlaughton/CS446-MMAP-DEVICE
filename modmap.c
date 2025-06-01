@@ -89,8 +89,10 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
 
             uprintf("First copyin\n");
             error = copyin(user_req, &kern_req_user, sizeof(kern_req_user));
-            if(error != 0)
+            if(error != 0){
+                uprintf("Copyin ERROR: %d", error);
                 break;
+            }
 
             uprintf("Addr Check\n");
             if(kern_req_user.addr != NULL){
