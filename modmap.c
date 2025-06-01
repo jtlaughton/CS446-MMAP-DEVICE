@@ -84,6 +84,8 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
 
     mmap_req_hook_t kern_req;
 
+    int using_cap_req = 0;
+
 	switch (cmd) {
         case MODMAPIOC_MAP:
             kern_req_user = (mmap_req_user_t *)addr;
@@ -93,7 +95,10 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
                 break;
             }
 
-            user_cap_req = (struct cap_req*)kern_req_user->extra;
+            if(kern_req_user->extra != NULL){
+                using_cap_req = 1;
+                user_cap_req = (struct cap_req*)kern_req_user->extra;
+            }
             
             kern_req.addr = NULL;
 	        kern_req.len = kern_req_user->len;
@@ -103,11 +108,13 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
 	        kern_req.pos = kern_req_user->pos;
 	        kern_req.extra = NULL;
 
-            error = copyin(user_cap_req, &kern_cap_req, sizeof(kern_cap_req));
-            if(error != 0)
-                break;
+            if(using_cap_req){
+                error = copyin(user_cap_req, &kern_cap_req, sizeof(kern_cap_req));
+                if(error != 0)
+                    break;
 
-            kern_req.extra = (void * __kerncap)(&kern_cap_req);
+                kern_req.extra = (void * __kerncap)(&kern_cap_req);
+            }
 
             register_t saved_retval = td->td_retval[0];
             
@@ -136,14 +143,16 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
             //     break;
             // }
 
-            uprintf("First Copyout\n");
-            error = copyout(&kern_cap_req, user_cap_req, sizeof(kern_cap_req));
-            if(error != 0){
-                uprintf("Copyout Error: %d\n", error);
-                break;
-            }
+            if(using_cap_req){
+                uprintf("First Copyout\n");
+                error = copyout(&kern_cap_req, user_cap_req, sizeof(kern_cap_req));
+                if(error != 0){
+                    uprintf("Copyout Error: %d\n", error);
+                    break;
+                }
 
-            kern_req_user->extra = (void * __capability)user_cap_req;
+                kern_req_user->extra = (void * __capability)user_cap_req;
+            }
 
             td->td_retval[0] = saved_retval;
             uprintf("Done\n");
