@@ -10,6 +10,7 @@
 #include <vm/pmap.h>
 #include <machine/bus.h>  /* For BUS_SPACE_MAXADDR constants */
 #include <cheri/cheric.h>
+#include <sys/proc.h>
 
 #include "modmap.h"
 
