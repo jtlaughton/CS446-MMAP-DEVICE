@@ -117,6 +117,8 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
 
             void * __kerncap mapped_addr = (void * __kerncap)td->td_retval[0];
 
+            uprintf("Here's the retval: %p\n", mapped_addr);
+
             kern_req_user->addr = kern_req.addr;
             kern_req_user->len = kern_req.len;
             kern_req_user->prot = kern_req.prot;
