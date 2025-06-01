@@ -7,6 +7,16 @@
 
 typedef struct mmap_req_hook mmap_req_hook_t;
 
+typedef struct mmap_req_user {
+	void * __capability addr;    // needs to be null on request. No hints possible for now
+	size_t len;
+	int prot;
+	int flags;
+	int fd;
+	off_t pos;
+	void * __capability extra;
+ } mmap_req_user_t;
+
 struct cap_req {
     void* __capability user_cap;
 };

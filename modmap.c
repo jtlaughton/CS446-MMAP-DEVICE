@@ -1,3 +1,4 @@
+#include <cerrno>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/conf.h>
@@ -73,36 +74,74 @@ static int
 modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
     struct thread *td)
 {
-    mmap_req_hook_t kern_req;
+    mmap_req_user_t kern_req_user;
     struct cap_req kern_cap_req;
-    mmap_req_hook_t* user_req;
-    struct cap_req* __capability user_cap_req;
+
+    mmap_req_user_t* user_req;
+    struct cap_req* user_cap_req;
     int error = 0;
 
+    mmap_req_hook_t kern_req;
+
 	switch (cmd) {
-	case MODMAPIOC_MAP:
-        user_req = (mmap_req_hook_t *)addr;
+        case MODMAPIOC_MAP:
+            user_req = (mmap_req_user_t *)addr;
 
-        error = copyin(user_req, &kern_req, sizeof(kern_req));
-        if(error != 0)
+            error = copyin(user_req, &kern_req_user, sizeof(kern_req_user));
+            if(error != 0)
+                break;
+
+            if(kern_req_user.addr != NULL){
+                error = EINVAL;
+                break;
+            }
+
+            user_cap_req = (struct cap_req*)kern_req_user.extra;
+            
+            kern_req.addr = NULL;
+	        kern_req.len = kern_req_user.len;
+	        kern_req.prot = kern_req_user.prot;
+	        kern_req.flags = kern_req_user.flags;
+	        kern_req.fd = kern_req_user.fd;
+	        kern_req.pos = kern_req_user.pos;
+	        kern_req.extra = NULL;
+
+            error = copyin(user_cap_req, &kern_cap_req, sizeof(kern_cap_req));
+            if(error != 0)
+                break;
+
+            kern_req.extra = (void * __kerncap)(&kern_cap_req);
+            
+            error = kern_mmap_hook(td, &kern_req);
+            if(error != 0)
+                break;
+
+            kern_req_user.addr = NULL;
+            kern_req_user.len = kern_req.len;
+            kern_req_user.prot = kern_req.prot;
+            kern_req_user.flags = kern_req.flags;
+            kern_req_user.fd = kern_req.fd;
+            kern_req_user.pos = kern_req.pos;
+            kern_req_user.extra = NULL;
+
+            error = copyout(&kern_req_user, user_req, sizeof(kern_req_user));
+            if(error != 0)
+                break;
+
+            error = copyoutcap(kern_req.addr, user_req.addr, sizeof(void *));
+            if(error != 0)
+                break;
+
+            error = copyout(&kern_cap_req, user_cap_req, sizeof(kern_cap_req));
+            if(error != 0)
+                break;
+
+            user_req.extra = (void *)user_cap_req;
+
             break;
-
-        user_cap_req = kern_req.extra;
-
-        error = copyin(user_cap_req, &kern_cap_req, sizeof(kern_cap_req));
-        if(error != 0)
+        default:
+            error = ENOTTY;
             break;
-
-        kern_req.extra = (void * __kerncap)(&kern_cap_req);
-        
-        error = kern_mmap_hook(td, &kern_req);
-        if(error != 0)
-            break;
-
-		break;
-	default:
-		error = ENOTTY;
-		break;
 	}
 
 	return (error);
