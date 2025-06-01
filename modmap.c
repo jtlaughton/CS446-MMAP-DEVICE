@@ -127,7 +127,7 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
             if(error != 0)
                 break;
 
-            error = copyoutcap(kern_req.addr, user_req.addr, sizeof(void *));
+            error = copyoutcap(kern_req.addr, user_req->addr, sizeof(void *));
             if(error != 0)
                 break;
 
@@ -135,7 +135,7 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
             if(error != 0)
                 break;
 
-            user_req.extra = (void *)user_cap_req;
+            user_req->extra = (void *)user_cap_req;
 
             break;
         default:
