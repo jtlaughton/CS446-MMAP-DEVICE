@@ -129,7 +129,7 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
             void * __kerncap kern_mapped_addr = (void * __kerncap)td->td_retval[0];
             
             // Convert to user capability using copyoutcap
-            void * __capability user_mapped_addr;
+            void * __capability user_mapped_addr = NULL;
             error = copyoutcap(kern_mapped_addr, user_mapped_addr, kern_req_user->len);
             if(error != 0){
                 uprintf("copyoutcap failed: %d\n", error);
