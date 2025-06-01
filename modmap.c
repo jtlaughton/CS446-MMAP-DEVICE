@@ -115,7 +115,7 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
                 break;
             }
 
-            kern_req_user->addr = (void * __capability)td->td_retval[0];
+            kern_req_user->addr = NULL;
             kern_req_user->len = kern_req.len;
             kern_req_user->prot = kern_req.prot;
             kern_req_user->flags = kern_req.flags;
@@ -124,6 +124,19 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
             kern_req_user->extra = NULL;
 
             uprintf("Here's the addr: %p\n", kern_req_user->addr);
+
+            // Get the kernel capability from the mmap result
+            void * __kerncap kern_mapped_addr = (void * __kerncap)td->td_retval[0];
+            
+            // Convert to user capability using copyoutcap
+            void * __capability user_mapped_addr;
+            error = copyoutcap(kern_mapped_addr, user_mapped_addr, kern_req_user->len);
+            if(error != 0){
+                uprintf("copyoutcap failed: %d\n", error);
+                break;
+            }
+
+            kern_req_user->addr = user_mapped_addr;
 
             // ignore copy out cap for now
             // uprintf("First Copyoutcap\n");
