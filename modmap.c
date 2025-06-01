@@ -134,8 +134,6 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
             //     break;
             // }
 
-            uprintf("Here's success addr: %p\n", kern_req_user->addr);
-
             uprintf("First Copyout\n");
             error = copyout(&kern_cap_req, kern_req_user->extra, sizeof(kern_cap_req));
             if(error != 0)
