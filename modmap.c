@@ -143,6 +143,7 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
 
             kern_req_user->extra = (void * __capability)user_cap_req;
 
+            uprintf("Done\n");
             break;
         default:
             error = ENOTTY;
