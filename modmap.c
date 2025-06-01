@@ -78,7 +78,7 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
 
     struct cap_req* user_cap_req;
     struct cap_req kern_cap_req;
-    
+
     int error = 0;
 
     mmap_req_hook_t kern_req;
@@ -88,19 +88,19 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
             kern_req_user = (mmap_req_user_t *)addr;
 
             uprintf("Addr Check\n");
-            if(kern_req_user.addr != NULL){
+            if(kern_req_user->addr != NULL){
                 error = EINVAL;
                 break;
             }
 
-            user_cap_req = (struct cap_req*)kern_req_user.extra;
+            user_cap_req = (struct cap_req*)kern_req_user->extra;
             
             kern_req.addr = NULL;
-	        kern_req.len = kern_req_user.len;
-	        kern_req.prot = kern_req_user.prot;
-	        kern_req.flags = kern_req_user.flags;
-	        kern_req.fd = kern_req_user.fd;
-	        kern_req.pos = kern_req_user.pos;
+	        kern_req.len = kern_req_user->len;
+	        kern_req.prot = kern_req_user->prot;
+	        kern_req.flags = kern_req_user->flags;
+	        kern_req.fd = kern_req_user->fd;
+	        kern_req.pos = kern_req_user->pos;
 	        kern_req.extra = NULL;
 
             uprintf("First Copy In\n");
@@ -115,13 +115,13 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
             if(error != 0)
                 break;
 
-            kern_req_user.addr = NULL;
-            kern_req_user.len = kern_req.len;
-            kern_req_user.prot = kern_req.prot;
-            kern_req_user.flags = kern_req.flags;
-            kern_req_user.fd = kern_req.fd;
-            kern_req_user.pos = kern_req.pos;
-            kern_req_user.extra = NULL;
+            kern_req_user->addr = NULL;
+            kern_req_user->len = kern_req.len;
+            kern_req_user->prot = kern_req.prot;
+            kern_req_user->flags = kern_req.flags;
+            kern_req_user->fd = kern_req.fd;
+            kern_req_user->pos = kern_req.pos;
+            kern_req_user->extra = NULL;
 
             uprintf("First Copyoutcap\n");
             error = copyoutcap(kern_req.addr, kern_req_user->addr, sizeof(void *));
