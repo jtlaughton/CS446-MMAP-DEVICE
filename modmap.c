@@ -74,10 +74,8 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
     struct thread *td)
 {
     uprintf("In Modmap Ioctl\n");
-    mmap_req_user_t kern_req_user;
-    struct cap_req kern_cap_req;
+    mmap_req_user_t* kern_req_user;
 
-    mmap_req_user_t* user_req;
     struct cap_req* user_cap_req;
     int error = 0;
 
@@ -85,14 +83,7 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
 
 	switch (cmd) {
         case MODMAPIOC_MAP:
-            user_req = (mmap_req_user_t *)addr;
-
-            uprintf("First copyin\n");
-            error = copyin(user_req, &kern_req_user, sizeof(kern_req_user));
-            if(error != 0){
-                uprintf("Copyin ERROR: %d", error);
-                break;
-            }
+            kern_req_user = (mmap_req_user_t *)addr;
 
             uprintf("Addr Check\n");
             if(kern_req_user.addr != NULL){
@@ -110,7 +101,7 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
 	        kern_req.pos = kern_req_user.pos;
 	        kern_req.extra = NULL;
 
-            uprintf("Second Copy In\n");
+            uprintf("First Copy In\n");
             error = copyin(user_cap_req, &kern_cap_req, sizeof(kern_cap_req));
             if(error != 0)
                 break;
@@ -130,22 +121,15 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
             kern_req_user.pos = kern_req.pos;
             kern_req_user.extra = NULL;
 
-            uprintf("First Copyout\n");
-            error = copyout(&kern_req_user, user_req, sizeof(kern_req_user));
-            if(error != 0)
-                break;
-
             uprintf("First Copyoutcap\n");
-            error = copyoutcap(kern_req.addr, user_req->addr, sizeof(void *));
+            error = copyoutcap(kern_req.addr, kern_req_user->addr, sizeof(void *));
             if(error != 0)
                 break;
 
-            uprintf("Second Copyout\n");
-            error = copyout(&kern_cap_req, user_cap_req, sizeof(kern_cap_req));
+            uprintf("First Copyout\n");
+            error = copyout(&kern_cap_req, kern_req_user->extra, sizeof(kern_cap_req));
             if(error != 0)
                 break;
-
-            user_req->extra = (void *)user_cap_req;
 
             break;
         default:
