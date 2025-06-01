@@ -115,11 +115,7 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
                 break;
             }
 
-            void * __kerncap mapped_addr = (void * __kerncap)td->td_retval[0];
-
-            uprintf("Here's the retval: %p\n", mapped_addr);
-
-            kern_req_user->addr = kern_req.addr;
+            kern_req_user->addr = (void * __capability)td->td_retval[0];
             kern_req_user->len = kern_req.len;
             kern_req_user->prot = kern_req.prot;
             kern_req_user->flags = kern_req.flags;
@@ -127,13 +123,16 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
             kern_req_user->pos = kern_req.pos;
             kern_req_user->extra = NULL;
 
-            uprintf("First Copyoutcap\n");
-            error = copyoutcap(&mapped_addr, &(kern_req_user->addr), sizeof(void *));
-            if(error != 0){
-                uprintf("Here's the addr: %p\n", kern_req.addr);
-                uprintf("Copuoutcap error: %d\n", error);
-                break;
-            }
+            uprintf("Here's the addr: %p\n", kern_req_user->addr);
+
+            // ignore copy out cap for now
+            // uprintf("First Copyoutcap\n");
+            // error = copyoutcap(mapped_addr, kern_req_user->addr, sizeof(void *));
+            // if(error != 0){
+            //     uprintf("Here's the addr: %p\n", kern_req.addr);
+            //     uprintf("Copuoutcap error: %d\n", error);
+            //     break;
+            // }
 
             uprintf("Here's success addr: %p\n", kern_req_user->addr);
 
