@@ -112,8 +112,10 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
             
             uprintf("Kern mmap\n");
             error = kern_mmap_hook(td, &kern_req);
-            if(error != 0)
+            if(error != 0){
+                uprintf("Error From mmap: %d", error);
                 break;
+            }
 
             kern_req_user->addr = NULL;
             kern_req_user->len = kern_req.len;
