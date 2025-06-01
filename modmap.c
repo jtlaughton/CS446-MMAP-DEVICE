@@ -125,7 +125,7 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
             uprintf("First Copyoutcap\n");
             error = copyoutcap(kern_req.addr, kern_req_user->addr, sizeof(void *));
             if(error != 0){
-                uprintf("Copuoutcap error: %#p\n", error);
+                uprintf("Copuoutcap error: %d\n", error);
                 break;
             }
 
