@@ -87,7 +87,6 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
         case MODMAPIOC_MAP:
             kern_req_user = (mmap_req_user_t *)addr;
 
-            uprintf("Addr Check\n");
             if(kern_req_user->addr != NULL){
                 error = EINVAL;
                 break;
@@ -103,14 +102,12 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
 	        kern_req.pos = kern_req_user->pos;
 	        kern_req.extra = NULL;
 
-            uprintf("First Copy In\n");
             error = copyin(user_cap_req, &kern_cap_req, sizeof(kern_cap_req));
             if(error != 0)
                 break;
 
             kern_req.extra = (void * __kerncap)(&kern_cap_req);
             
-            uprintf("Kern mmap\n");
             error = kern_mmap_hook(td, &kern_req);
             if(error != 0){
                 uprintf("Error From mmap: %d", error);
@@ -127,8 +124,10 @@ modmap_ioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags,
 
             uprintf("First Copyoutcap\n");
             error = copyoutcap(kern_req.addr, kern_req_user->addr, sizeof(void *));
-            if(error != 0)
+            if(error != 0){
+                uprintf("Copuoutcap error: %#p\n", error);
                 break;
+            }
 
             uprintf("First Copyout\n");
             error = copyout(&kern_cap_req, kern_req_user->extra, sizeof(kern_cap_req));
