@@ -19,6 +19,7 @@ typedef struct mmap_req_user {
 
 struct cap_req {
     void* __capability user_cap;
+	void* __capability sealed_cap
 };
 
 #define MODMAPIOC_MAP	_IOWR('a', 1, mmap_req_user_t)
